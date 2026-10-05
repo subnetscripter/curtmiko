@@ -2,40 +2,93 @@
 
 use std::error::Error;
 use telnet::{Event, Telnet};
-use std::io;
 use std::time::Duration;
 use regex::Regex;
 
 fn main() {
     
-    let mut conn = match Telnet::connect(("10.0.0.66", 23), 1024) {
-        Ok(t) => {
-            println!("Connected to device successfully!");
-            t
-        },
-        Err(e) => panic!("Could not connect to device!")
-    };
+    let mut node = Node::build("10.0.0.66", 23).unwrap();
+    println!("Telnet connection to node succesful!");
+    let _ = node.authenticate("george", "george@123");
+    println!("Authenticaton to node successful");
+
+}
+
+
+//Node will be a generic struct type that connects to any device
+//Right now it only connects via telnet.
+//Need to expand to ssh for secure connections in the future.
+pub struct Node{
+    conn: Telnet,
+}
+
+impl Node{
+    pub fn build(ip: &str, port: u16) -> Result<Node, Box<dyn Error>> {
+        
+        let conn = Telnet::connect((ip, port), 1024)?;
+
+        Ok(Node{conn})
+    }
 
 
     
-    let _ = authenticate("george","george@123", &mut conn);
-    //let _ = write_data("conf t", &mut conn).expect("Failed to write data: {e}");
-    //let _ = write_data("username applebanana password applebanana@123", &mut conn).expect("Failed to write data: {e}");
+    pub fn authenticate(&mut self, username: &str, password: &str) -> Result<(), Box<dyn Error>> {
+        
+        let mut reg = Regex::new(r":$").unwrap();
 
+        read_data(&mut self.conn, &reg);
+        let _ = self.write_data(username)?;
+
+        read_data(&mut self.conn, &reg);
+        let _ = self.write_data(password)?;
+
+        Ok(())
+
+    }
+
+    //Streams the output from the telnet connections until
+    // the desired Regex pattern is matched.
+    // I'm considering adding a bool as a parameter in the future
+    // that will indicate whether to discard the output or not.
+    fn read_data(&mut self, reg: &Regex) {
+        
+        //Used to buffer the output from reading the telnet stream.
+        //Used for regex search
+        let mut hay_buffer = String::new();
+
+        //Loops over telnet Event stream until the Event variant
+        // we want (Even::Data)) is found
+        loop{
+            let event = self.conn.read_timeout(Duration::from_secs(2));
+            if let Ok(Event::Data(data)) = event{
+                let data_str = String::from_utf8_lossy(&data);
+                hay_buffer.push_str(data_str[..].trim());
+                match reg.find(&hay_buffer[..]){
+                    Some(t) => {
+                        println!("{hay_buffer}"); // THIS LINE TO BE REMOVED
+                        break;
+                    },
+                    None => continue
+                };
+            };
+        }
+    }
+
+    fn write_data(&mut self, string_data: &str) -> Result<(), Box<dyn Error>> {
+        let data = string_data.as_bytes();
+        let mut result = self.conn.write(data)?;
+        result = self.conn.write(b"\n")?;
+        Ok(())
+
+    }
 
 }
 
-fn write_data(string_data: &str,  conn: &mut Telnet) -> Result<(), Box<dyn Error>> {
-    let data = string_data.as_bytes();
-    let mut result = conn.write(data)?;
-    result = conn.write(b"\n")?;
-    Ok(())
 
-}
-
-//Reads data from a telnet::Telnet connection.
-//Change in the future to accomodate telnet and ssh2.
-//For now it just prints out the data
+//Streams the output from the telnet connections until
+// the desired Regex pattern is matched.
+// I'm considering adding a bool as a parameter in the future
+// that will indicate whether to discard the output or not.
 fn read_data(conn: &mut Telnet, reg: &Regex) {
     
     //Used to buffer the output from reading the telnet stream.
@@ -51,7 +104,7 @@ fn read_data(conn: &mut Telnet, reg: &Regex) {
             hay_buffer.push_str(data_str[..].trim());
             match reg.find(&hay_buffer[..]){
                 Some(t) => {
-                    println!("{hay_buffer}");
+                    //println!("{hay_buffer}"); // THIS LINE TO BE REMOVED
                     break;
                 },
                 None => continue
@@ -61,16 +114,3 @@ fn read_data(conn: &mut Telnet, reg: &Regex) {
 }
 
 
-fn authenticate(username: &str, password: &str, conn: &mut Telnet) -> Result<(), Box<dyn Error>> {
-    
-    let mut reg = Regex::new(r":$").unwrap();
-
-    read_data(conn, &reg);
-    let _ = write_data(username, conn)?;
-
-    read_data(conn, &reg);
-    let _ = write_data(password, conn)?;
-
-    Ok(())
-
-}
