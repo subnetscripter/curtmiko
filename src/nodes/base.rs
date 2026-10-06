@@ -1,0 +1,52 @@
+use std::error::Error;
+use regex::Regex;
+
+use crate::connections::telnet_conn::TelnetConn;
+
+
+//Node will be a generic struct type that connects to any device
+//Right now it only connects via telnet.
+//Need to expand to ssh for secure connections in the future.
+pub struct Node{
+    conn: TelnetConn,
+}
+
+impl Node{
+    pub fn build(ip: &str, port: u16) -> Result<Node, Box<dyn Error>> {
+        
+        let telnet_conn = TelnetConn::build(ip, port)?;
+
+
+        Ok(Node{conn: telnet_conn})
+    }
+
+
+    // #BUG DETECTED#
+    //If the user credentials do not exist on the remote node
+    //The terminal hangs. Need to create error handling for this situation.
+    pub fn authenticate(&mut self, username: &str, password: &str, reg: &Regex) -> Result<(), Box<dyn Error>> {
+        self.conn.read_data(&reg);
+        let _ = self.conn.write_data(username)?;
+
+        self.conn.read_data(&reg);
+        let _ = self.conn.write_data(password)?;
+
+        Ok(())
+
+    }
+
+    pub fn send_command(&mut self, command: &str, reg: &Regex) -> Result<(), Box<dyn Error>> {
+        //Looks for the correct ending prompt to ensure that you can send the required configs.
+        self.conn.read_data(reg);
+        match self.conn.write_data(command) {
+            Ok(t) => println!("Sent command: {command}"),
+            Err(e) => return Err(e)
+        }
+        Ok(())
+    }
+
+}
+
+
+
+
