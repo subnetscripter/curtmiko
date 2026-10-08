@@ -6,4 +6,5 @@ edition = "2024"
 [dependencies]
 ipnet = "2.12.2"
 regex = "1.13.1"
+ssh2 = "0.9.6"
 telnet = "0.2.5"
