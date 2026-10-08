@@ -2,8 +2,7 @@ use std::error::Error;
 use regex::Regex;
 
 use crate::connections::telnet_conn::TelnetConn;
-use crate::net_io::reader::Reader;
-use crate::net_io::writer::Writer;
+use crate::connections::Reader;;
 
 
 //Node will be a generic struct type that connects to any device
@@ -11,8 +10,7 @@ use crate::net_io::writer::Writer;
 //Need to expand to ssh for secure connections in the future.
 pub struct Node{
     conn: TelnetConn,
-    reader: Reader,
-    writer: Writer
+    reader: Reader;,
 }
 
 impl Node{
@@ -20,10 +18,9 @@ impl Node{
         
         let telnet_conn = TelnetConn::build(ip, port)?;
         let reader = Reader::new();
-        let writer = Writer::new();
 
 
-        Ok(Node{conn: telnet_conn, reader, writer})
+        Ok(Node{conn: telnet_conn, reader})
     }
 
 
@@ -31,11 +28,11 @@ impl Node{
     //If the user credentials do not exist on the remote node
     //The terminal hangs. Need to create error handling for this situation.
     pub fn authenticate(&mut self, username: &str, password: &str, reg: &Regex) -> Result<(), Box<dyn Error>> {
-        self.reader.read_from_telnet(&mut self.conn, &reg);
-        let _ = self.writer.write_to_telnet(&mut self.conn, username)?;
+        self.reader.read_from_telnet(self.conn, &reg);
+        let _ = self.conn.write_data(username)?;
 
-        self.reader.read_from_telnet(&mut self.conn, &reg);
-        let _ = self.writer.write_to_telnet(&mut self.conn, password)?;
+        self.reader.read_from_telnet(self.conn, &reg);
+        let _ = self.conn.write_data(password)?;
 
         Ok(())
 
@@ -43,12 +40,11 @@ impl Node{
 
     pub fn send_command(&mut self, command: &str, reg: &Regex) -> Result<(), Box<dyn Error>> {
         //Looks for the correct ending prompt to ensure that you can send the required configs.
-        self.reader.read_from_telnet(&mut self.conn, reg);
-        match self.writer.write_to_telnet(&mut self.conn, command) {
-            Ok(t) => println!("COMMAND: {command}"),
+        self.reader.read_from_telnet(self.conn, reg);
+        match self.conn.write_data(command) {
+            Ok(t) => println!("Sent command: {command}"),
             Err(e) => return Err(e)
         }
-        self.reader.read_from_telnet(&mut self.conn, reg);
         Ok(())
     }
 

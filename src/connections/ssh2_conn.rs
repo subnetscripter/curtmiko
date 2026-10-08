@@ -6,7 +6,7 @@ use std::net::TcpStream;
 use std::io::prelude::*;
 
 pub struct SSHConn{
-    sess: Session,
+    pub sess: Session,
 }
 
 
@@ -59,10 +59,10 @@ impl SSHConn {
 
     }
 
-    pub fn write_data(&mut self, data: &str) -> Result<(), Box<dyn Error>>{
+    pub fn write_data(&mut self, string_data: &str) -> Result<(), Box<dyn Error>>{
         
         let mut chan = self.sess.channel_session()?;
-        let _ = chan.exec(data)?;
+        let _ = chan.exec(string_data)?;
         let _ = self.read_data(&mut chan)?;
 
         Ok(())
