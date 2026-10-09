@@ -8,10 +8,3 @@ use std::time::Duration;
 use telnet::Event;
 
 
-trait Conn{
-
-    fn write_data(&mut self) -> Result<(), Box<dyn Error>>;
-
-
-}
-

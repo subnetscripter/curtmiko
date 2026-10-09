@@ -4,7 +4,8 @@ use std::error::Error;
 use regex::Regex;
 use std::time::Duration;
 use telnet::Event;
-
+use ssh2::Channel;
+use std::io::Read;
 
 
 pub struct Reader;
@@ -39,5 +40,23 @@ impl Reader{
             };
         };
         Ok(())
+    }
+
+
+
+
+    pub fn read_from_ssh(&self, chan: &mut Channel) -> Result<(), Box<dyn Error>>{
+        
+        //Used to store output returnred from the channel.
+        let mut s = String::new();
+
+        let _ = chan.read_to_string(&mut s)?;
+
+        println!("{}", s); // CONSIDER RETURNING INSTEAD OF PRINTING OUTPUT.
+
+        let _ = chan.wait_close()?;
+        
+        Ok(())
+            
     }
 }

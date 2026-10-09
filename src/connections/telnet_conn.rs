@@ -3,6 +3,9 @@ use regex::Regex;
 use std::error::Error;
 use std::time::Duration;
 
+
+
+
 pub struct TelnetConn{
     pub conn: Telnet,
 }
