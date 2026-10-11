@@ -59,4 +59,6 @@ impl Reader{
         Ok(())
             
     }
+
+    //pub fun read_from_expect(&self, expected_end: &str)
 }

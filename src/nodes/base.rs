@@ -3,9 +3,73 @@ use regex::Regex;
 
 use crate::connections::telnet_conn::TelnetConn;
 use crate::connections::ssh2_conn::SSHConn;
+use crate::connections::ConnType;
 use crate::net_io::reader::Reader;
 use crate::net_io::writer::Writer;
 
+//Used to enforce the types that the user can
+//pass to the library.
+pub struct NodeInfo{
+    hostname: String,
+    ip: String,
+    port: u16,
+    username: String,
+    password: String,
+    conn_type: ConnType,
+}
+
+impl NodeInfo{
+    
+    pub fn new(
+        hostname: &str,
+        ip: &str,
+        port: u16,
+        username: &str,
+        password: &str,
+        conn_type: ConnType,
+    ) -> NodeInfo{
+
+        NodeInfo{
+            hostname: hostname.to_string(),
+            ip: ip.to_string(),
+            port,
+            username: username.to_string(),
+            password: password.to_string(),
+            conn_type
+        }
+    }
+
+    pub fn hostname(&self) -> &str{
+        &self.hostname[..]
+    }
+
+    pub fn ip(&self) -> &str{
+        &self.ip[..]
+    }
+
+    pub fn username(&self) -> &str{
+        &self.username[..]
+    }
+
+    pub fn password(&self) -> &str{
+        &self.password[..]
+    }
+
+    pub fn conn_type(&self) -> &ConnType{
+        &self.conn_type
+    }
+
+    pub fn port(&self) -> u16{
+        self.port
+    }
+}
+
+//User to determine where mode specfic node modules run
+//telnet or ssh commands.
+pub enum NodeType{
+    Telnet(TelnetNode),
+    SSH(SSHNode)
+}
 
 /*
 
@@ -51,7 +115,7 @@ impl TelnetNode{
         Ok(())
 
     }
-
+    
     pub fn send_command(&mut self, command: &str, reg: &Regex) -> Result<(), Box<dyn Error>> {
         //Looks for the correct ending prompt to ensure that you can send the required command.
         self.reader.read_from_telnet(&mut self.conn, reg);

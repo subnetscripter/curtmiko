@@ -4,26 +4,44 @@ mod connections;
 mod nodes;
 mod net_io;
 
-use regex::Regex;
-use nodes::base::{TelnetNode, SSHNode};
+use nodes::base::{NodeInfo};
+use nodes::fortigate::FortigateNode;
+use nodes::juniper_srx::JuniperSrxNode;
 use std::error::Error;
+use connections::ConnType;
 
+    
 
 fn main() {
-    
-    //SSH testing
-    let mut node1 = SSHNode::build("10.0.0.28", 22).unwrap();
-    node1.authenticate("george", "george@123").unwrap();
-    node1.send_command("ls -lh /").unwrap();
 
-    //Telnet testing
-    let mut node = TelnetNode::build("10.0.0.66", 23).unwrap();
-    println!("Telnet connection to node succesful!");
-    let mut reg = Regex::new(r":$").unwrap();
-    let _ = node.authenticate("george", "george@123", &reg);
-    println!("Authenticaton to node successful");
-    let mut reg = Regex::new(r"#").unwrap();
-    node.send_command("sh run", &reg);
+/*
+    let node_details = NodeInfo::new(
+        "TEST-FORTIGATE",
+        "10.0.0.1",
+        22,
+        "george",
+        "george@123",
+        ConnType::SSH
+    );
+
+
+    let mut fg_node = FortigateNode::new(node_details).unwrap();
+    //fg_node.show_configs();
+    fg_node.show_system_status();
+*/
+    let srx_details = NodeInfo::new(
+        "TEST-SRX",
+        "192.168.1.3",
+        22,
+        "george",
+        "george@123",
+        ConnType::SSH
+    );
+
+    let mut srx_node = JuniperSrxNode::new(srx_details).unwrap();
+    srx_node.show_system_status();
+    //srx_node.show_configs();
+
 }
 
 

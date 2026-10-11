@@ -8,3 +8,7 @@ use std::time::Duration;
 use telnet::Event;
 
 
+pub enum ConnType{
+    SSH,
+    Telnet
+}
