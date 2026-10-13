@@ -1,11 +1,13 @@
 use crate::connections::telnet_conn::TelnetConn;
 use crate::connections::ssh2_conn::SSHConn;
+use crate::connections::expect_conn::ExpectConn;
 use crate::net_io::reader::Reader;
 use std::error::Error;
 use regex::Regex;
 use std::time::Duration;
 use telnet::Event;
-
+use expectrl;
+use expectrl::Expect;
 
 
 //Unit struct used to implement functions to write data for various conn types.
@@ -38,4 +40,9 @@ impl Writer{
     }
 
 
+    pub fn write_to_expect(&self, expect_conn: &mut ExpectConn, string_data: &str, expect_reg: &str) -> Result<(), Box<dyn Error>>{
+        expect_conn.conn.expect(expectrl::Regex(expect_reg))?;
+        expect_conn.conn.send_line(string_data)?;
+        Ok(())
+    }
 }

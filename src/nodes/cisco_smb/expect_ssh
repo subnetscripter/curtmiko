@@ -1,0 +1,38 @@
+#!/usr/bin/expect -f
+
+#set timeout
+set timeout 4
+
+set host_ip [lindex $argv 0]
+set host_port [lindex $argv 1]
+set username [lindex $argv 2]
+set password [lindex $argv 3]
+set command [lindex $argv 4]
+set ssh_script [lindex $argv 5]
+
+#start the interactive command
+spawn $ssh_script $host_ip $host_port
+
+
+
+expect "User Name"
+send "$username\r"
+
+set timeout 1
+
+expect "Password:"
+send "$password\r"
+set timeout 1
+
+expect -re "#$"
+send "terminal datadump\r"
+
+set timeout 5
+
+expect -re "#$"
+send "show run\r"
+
+expect -re "#$"
+send "exit\r"
+
+expect eof

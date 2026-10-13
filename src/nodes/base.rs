@@ -3,6 +3,7 @@ use regex::Regex;
 
 use crate::connections::telnet_conn::TelnetConn;
 use crate::connections::ssh2_conn::SSHConn;
+use crate::connections::expect_conn::ExpectConn;
 use crate::connections::ConnType;
 use crate::net_io::reader::Reader;
 use crate::net_io::writer::Writer;
@@ -135,7 +136,7 @@ impl TelnetNode{
 
 
 pub struct SSHNode{
-    conn: SSHConn,
+    pub conn: SSHConn,
     reader: Reader,
     writer: Writer
 }
@@ -158,4 +159,29 @@ impl SSHNode{
         Ok(())
         
     }
+}
+
+pub struct ExpectNode{
+    conn: ExpectConn,
+    reader: Reader,
+    writer: Writer
+}
+
+impl ExpectNode{
+    
+    pub fn build(ip: &str, port: u16) -> Result<ExpectNode, Box<dyn Error>>{
+        let mut conn = ExpectConn::build(ip, port)?;
+        let reader = Reader::new();
+        let writer = Writer::new();
+        Ok(ExpectNode{conn, reader, writer})
+
+    }
+
+    pub fn authenticate(&mut self, username: &str, password: &str, reg_expect_string: &str) ->Result<(), Box<dyn Error>>{
+        self.writer.write_to_expect(&mut self.conn, username, reg_expect_string)?;
+        self.writer.write_to_expect(&mut self.conn, password, reg_expect_string)?;
+        Ok(())
+
+    }
+
 }

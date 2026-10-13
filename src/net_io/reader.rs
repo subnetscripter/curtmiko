@@ -1,5 +1,6 @@
 use crate::connections::telnet_conn::TelnetConn;
 use crate::connections::ssh2_conn::SSHConn;
+use crate::connections::expect_conn::ExpectConn;
 use std::error::Error;
 use regex::Regex;
 use std::time::Duration;
@@ -60,5 +61,4 @@ impl Reader{
             
     }
 
-    //pub fun read_from_expect(&self, expected_end: &str)
 }

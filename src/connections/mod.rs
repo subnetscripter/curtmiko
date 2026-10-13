@@ -1,5 +1,6 @@
 pub mod telnet_conn;
 pub mod ssh2_conn;
+pub mod expect_conn;
 
 use telnet_conn::TelnetConn;
 use std::error::Error;
